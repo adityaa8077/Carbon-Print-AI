@@ -18,6 +18,14 @@ import { NextResponse, type NextRequest } from 'next/server';
  * See SECURITY.md and https://nextjs.org/docs/app/guides/content-security-policy.
  */
 export function middleware(request: NextRequest): NextResponse {
+  // Skip prefetches dynamically (equivalent to the previous declarative matcher config)
+  const isPrefetch =
+    request.headers.has('next-router-prefetch') ||
+    request.headers.get('purpose') === 'prefetch';
+  if (isPrefetch) {
+    return NextResponse.next();
+  }
+
   const nonce = btoa(crypto.randomUUID());
   const isDev = process.env.NODE_ENV === 'development';
 
@@ -48,15 +56,6 @@ export function middleware(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  // Run on document requests only — skip static assets, the image optimizer,
-  // and prefetches (which don't execute scripts and shouldn't pay for a nonce).
-  matcher: [
-    {
-      source: '/((?!_next/static|_next/image|favicon.ico).*)',
-      missing: [
-        { type: 'header', key: 'next-router-prefetch' },
-        { type: 'header', key: 'purpose', value: 'prefetch' },
-      ],
-    },
-  ],
+  // Run on document requests only — skip static assets and the image optimizer.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
