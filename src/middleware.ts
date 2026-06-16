@@ -20,13 +20,13 @@ import { NextResponse, type NextRequest } from 'next/server';
 export function middleware(request: NextRequest): NextResponse {
   // Skip prefetches dynamically (equivalent to the previous declarative matcher config)
   const isPrefetch =
-    request.headers.has('next-router-prefetch') ||
+    request.headers.get('next-router-prefetch') !== null ||
     request.headers.get('purpose') === 'prefetch';
   if (isPrefetch) {
     return NextResponse.next();
   }
 
-  const nonce = btoa(crypto.randomUUID());
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   const isDev = process.env.NODE_ENV === 'development';
 
   const csp = [
