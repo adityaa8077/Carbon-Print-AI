@@ -26,7 +26,7 @@ export function middleware(request: NextRequest): NextResponse {
     return NextResponse.next();
   }
 
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+  const nonce = btoa(crypto.randomUUID());
   const isDev = process.env.NODE_ENV === 'development';
 
   const csp = [
