@@ -67,7 +67,7 @@ export function calculateShap(input: FootprintInput, result: FootprintResult): S
     const absDiff = Math.abs(diff);
 
     // Calculate relative impact percentage against the total average regional footprint
-    const impact = Math.max(1, Math.round((absDiff / avgTotalKg) * 100));
+    const impact = Math.max(1, round((absDiff / avgTotalKg) * 100, 0));
 
     let description = '';
     const dietText = input.food.diet.replace('_', ' ');

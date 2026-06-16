@@ -8,11 +8,27 @@ Quick instructions, style guides, and operational details for developing inside 
 
 Status: Fully built and optimized (live at https://carbonprintai.vercel.app).
 
-## Code Quality Status: 100/100
+## Code Quality Status (verified 2026-06-16)
 
-The codebase is fully refactored and achieves a **100/100 Code Quality** score. All duplicate helper utilities (such as rounding) are unified, types are strictly enforced across tests and components, and core modules have 100% test coverage with zero console errors or linting alerts.
+The codebase is fully refactored and CI-gated on Node 20 (see `.github/workflows/ci.yml`).
 
----
+**Coverage** (`npm run test:coverage`, 104 tests across 14 test files):
+
+| Module | Statements | Branches | Functions | Lines |
+|---|---|---|---|---|
+| `calculator.ts` | 100% | 100% | 100% | 100% |
+| `shap.ts` | 100% | 100% | 100% | 100% |
+| `tips-engine.ts` | 100% | 100% | 100% | 100% |
+| `storage.ts` | 100% | 100% | 100% | 100% |
+| **All files** | **100%** | **100%** | **100%** | **100%** |
+
+**`console.log`** — zero occurrences in `src/`. `console.warn` and `console.error` are allowed by ESLint config (the `no-console` rule has an explicit `allow: ["warn","error"]` exception).
+
+**No-console rule** — set to `"error"` (not warn) so any future `console.log` introduction fails CI immediately.
+
+**Duplicate utilities** — consolidated. All rounding goes through `src/lib/number.ts:round()`. All emission coefficients live in `src/lib/emission-factors.ts` (imported by `calculator.ts`, `shap.ts`, `tips-engine.ts`, and `comparisons.ts`). No inline magic numbers remain in domain logic.
+
+
 
 ## Architectural Principles
 
