@@ -2,7 +2,7 @@
 
 > Analyze, monitor, and lower your personal greenhouse gas emissions — privately, securely, and entirely client-side.
 
-**Live Application:** _(https://carbonprintai.vercel.app/)_
+**Live Application:** _
 
 ![Carbon Print AI Landing Page](./screenshots/landing_page.png)
 
