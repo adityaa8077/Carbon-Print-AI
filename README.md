@@ -1,3 +1,5 @@
+[![CI](https://github.com/adityaa8077/Carbon-Print-AI/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/adityaa8077/Carbon-Print-AI/actions/workflows/ci.yml)
+
 # 📊 Carbon Print AI — Advanced Personal Carbon Estimator & Insights Dashboard
 
 > Analyze, monitor, and lower your personal greenhouse gas emissions — privately, securely, and entirely client-side.
