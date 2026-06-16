@@ -22,6 +22,18 @@ export interface FieldShellProps {
   className?: string;
 }
 
+/** ID suffix for hint elements. */
+const HINT_ID_SUFFIX = '-hint';
+
+/** ID suffix for error elements. */
+const ERROR_ID_SUFFIX = '-error';
+
+/** Gap spacing between field elements. */
+const FIELD_GAP = 'gap-1.5';
+
+/** Minimum height for error message region. */
+const ERROR_MIN_HEIGHT = 'min-h-[1.25rem]';
+
 export function Field({
   label,
   hint,
@@ -31,14 +43,14 @@ export function Field({
   className,
 }: FieldShellProps): JSX.Element {
   const controlId = useId();
-  const hintId = `${controlId}-hint`;
-  const errorId = `${controlId}-error`;
+  const hintId = `${controlId}${HINT_ID_SUFFIX}`;
+  const errorId = `${controlId}${ERROR_ID_SUFFIX}`;
   const invalid = Boolean(error);
 
   const describedBy = cn(hint && hintId, invalid && errorId) || undefined;
 
   return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
+    <div className={cn('flex flex-col', FIELD_GAP, className)}>
       <label htmlFor={controlId} className="font-semibold text-slate-200">
         {label}
         {required ? (
@@ -57,7 +69,7 @@ export function Field({
       <p
         id={errorId}
         aria-live="polite"
-        className="min-h-[1.25rem] text-sm font-semibold text-red-400"
+        className={`${ERROR_MIN_HEIGHT} text-sm font-semibold text-red-400`}
       >
         {error}
       </p>

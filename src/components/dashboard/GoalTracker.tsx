@@ -17,6 +17,16 @@ const SUGGESTED_TARGET_FACTOR = 0.8;
 /** Goal figures are stored and displayed to one decimal place. */
 const GOAL_DECIMALS = 1;
 
+/** Loading placeholder height in Tailwind units. */
+const LOADING_CARD_HEIGHT = 'h-40';
+
+/** Minimum valid target threshold. */
+const MIN_TARGET_THRESHOLD = 0;
+
+/** Error messages for validation. */
+const INVALID_TARGET_ERROR = 'Enter a target greater than zero.';
+const TARGET_TOO_HIGH_ERROR = 'Your target should be below your current footprint to be a reduction.';
+
 /**
  * Set and track a reduction goal. This shell owns the persisted goal state and
  * validation; `GoalSetForm` and `GoalProgressCard` render the two modes. The
@@ -39,12 +49,12 @@ export function GoalTracker({ currentTonnes }: GoalTrackerProps): JSX.Element {
   }, []);
 
   function handleSet(): void {
-    if (!Number.isFinite(target) || target <= 0) {
-      setError('Enter a target greater than zero.');
+    if (!Number.isFinite(target) || target <= MIN_TARGET_THRESHOLD) {
+      setError(INVALID_TARGET_ERROR);
       return;
     }
     if (target >= currentTonnes) {
-      setError('Your target should be below your current footprint to be a reduction.');
+      setError(TARGET_TOO_HIGH_ERROR);
       return;
     }
     const next: Goal = {
@@ -65,7 +75,7 @@ export function GoalTracker({ currentTonnes }: GoalTrackerProps): JSX.Element {
 
   if (!loaded) {
     // Avoid an SSR/CSR mismatch: render nothing definitive until the goal is read.
-    return <Card className="h-40 animate-pulse bg-primary/5" aria-hidden="true" />;
+    return <Card className={`${LOADING_CARD_HEIGHT} animate-pulse bg-primary/5`} aria-hidden="true" />;
   }
 
   if (!goal) {

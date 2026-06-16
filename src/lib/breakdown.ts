@@ -8,6 +8,18 @@ export interface CategoryShare {
   percent: number;
 }
 
+/** Percentage multiplier for share calculations. */
+const PERCENT_MULTIPLIER = 100;
+
+/** Decimal places for percentage rounding. */
+const PERCENT_DECIMALS = 1;
+
+/** Minimum total to avoid division by zero. */
+const MIN_TOTAL_THRESHOLD = 0;
+
+/** Default percentage when total is zero. */
+const ZERO_PERCENT = 0;
+
 /**
  * Break a result's category totals into shares of the whole, sorted largest first.
  *
@@ -19,7 +31,7 @@ export function categoryBreakdown(result: FootprintResult): CategoryShare[] {
   const total = result.totalKg;
   return CATEGORY_KEYS.map((key) => {
     const kg = result.categories[key];
-    const percent = total > 0 ? round((kg / total) * 100, 1) : 0;
+    const percent = total > MIN_TOTAL_THRESHOLD ? round((kg / total) * PERCENT_MULTIPLIER, PERCENT_DECIMALS) : ZERO_PERCENT;
     return { key, kg, percent };
   }).sort((a, b) => b.kg - a.kg);
 }

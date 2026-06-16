@@ -10,6 +10,24 @@ export interface HomeStepProps {
   errors: FieldErrors;
 }
 
+/** Maximum percentage value for renewable electricity. */
+const MAX_RENEWABLE_PERCENT = 100;
+
+/** Minimum household size. */
+const MIN_HOUSEHOLD_SIZE = 1;
+
+/** Maximum household size. */
+const MAX_HOUSEHOLD_SIZE = 20;
+
+/** Step increment for household size input. */
+const HOUSEHOLD_SIZE_STEP = 1;
+
+/** No heating fuel type constant. */
+const NO_HEATING_FUEL = 'none';
+
+/** Default heating amount when not using heating. */
+const DEFAULT_HEATING_AMOUNT = 0;
+
 /** How to read each fuel's monthly quantity off a bill or delivery. */
 const HEATING_AMOUNT_HINT: Record<Exclude<HeatingFuel, 'none'>, string> = {
   gas: 'Cubic metres on your gas bill.',
@@ -19,6 +37,13 @@ const HEATING_AMOUNT_HINT: Record<Exclude<HeatingFuel, 'none'>, string> = {
   electric: 'Metered electricity used for heating.',
   heatpump: 'Electricity the heat pump draws.',
 };
+
+/**
+ * Determine if heating amount should be reset when fuel type changes.
+ */
+function shouldResetHeatingAmount(newFuel: HeatingFuel, currentFuel: HeatingFuel): boolean {
+  return HEATING_FUEL_UNIT[newFuel] !== HEATING_FUEL_UNIT[currentFuel];
+}
 
 /** Step 3 — household energy. Totals are attributed per person via household size. */
 export function HomeStep({ value, onChange, errors }: HomeStepProps): JSX.Element {
@@ -36,7 +61,7 @@ export function HomeStep({ value, onChange, errors }: HomeStepProps): JSX.Elemen
         label="Renewable electricity"
         value={value.renewablePercent}
         unit="%"
-        max={100}
+        max={MAX_RENEWABLE_PERCENT}
         hint="Share from a green tariff or your own solar."
         error={errors.renewablePercent}
         onChange={(renewablePercent) => onChange({ renewablePercent })}
@@ -51,13 +76,13 @@ export function HomeStep({ value, onChange, errors }: HomeStepProps): JSX.Elemen
           // (e.g. m³ → kg) to avoid silently reinterpreting the old number. Switching
           // between fuels that share a unit (electric ↔ heat pump, both kWh) keeps it.
           onChange(
-            HEATING_FUEL_UNIT[heatingFuel] === HEATING_FUEL_UNIT[value.heatingFuel]
-              ? { heatingFuel }
-              : { heatingFuel, heatingAmountPerMonth: 0 },
+            shouldResetHeatingAmount(heatingFuel, value.heatingFuel)
+              ? { heatingFuel, heatingAmountPerMonth: DEFAULT_HEATING_AMOUNT }
+              : { heatingFuel },
           )
         }
       />
-      {value.heatingFuel !== 'none' && (
+      {value.heatingFuel !== NO_HEATING_FUEL && (
         <NumberField
           label="Heating fuel used"
           value={value.heatingAmountPerMonth}
@@ -71,9 +96,9 @@ export function HomeStep({ value, onChange, errors }: HomeStepProps): JSX.Elemen
         label="Household size"
         value={value.householdSize}
         unit="people"
-        min={1}
-        max={20}
-        step={1}
+        min={MIN_HOUSEHOLD_SIZE}
+        max={MAX_HOUSEHOLD_SIZE}
+        step={HOUSEHOLD_SIZE_STEP}
         hint="Home energy is shared across everyone living with you."
         error={errors.householdSize}
         onChange={(householdSize) => onChange({ householdSize })}

@@ -10,6 +10,9 @@ export interface TransportStepProps {
   errors: FieldErrors;
 }
 
+/** Step increment for flight count inputs. */
+const FLIGHT_COUNT_STEP = 1;
+
 /** Step 2 — driving, transit, and flights. */
 export function TransportStep({ value, onChange, errors }: TransportStepProps): JSX.Element {
   return (
@@ -41,7 +44,7 @@ export function TransportStep({ value, onChange, errors }: TransportStepProps): 
         label="Short-haul flights"
         value={value.flightsShortHaulPerYear}
         unit="per year"
-        step={1}
+        step={FLIGHT_COUNT_STEP}
         hint="Under ~4 hours, one-way trips per year."
         error={errors.flightsShortHaulPerYear}
         onChange={(flightsShortHaulPerYear) => onChange({ flightsShortHaulPerYear })}
@@ -50,7 +53,7 @@ export function TransportStep({ value, onChange, errors }: TransportStepProps): 
         label="Long-haul flights"
         value={value.flightsLongHaulPerYear}
         unit="per year"
-        step={1}
+        step={FLIGHT_COUNT_STEP}
         hint="Over ~4 hours, one-way trips per year."
         error={errors.flightsLongHaulPerYear}
         onChange={(flightsLongHaulPerYear) => onChange({ flightsLongHaulPerYear })}

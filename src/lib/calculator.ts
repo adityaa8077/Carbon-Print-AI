@@ -17,6 +17,9 @@ import {
 import { round } from './number';
 import type { FootprintInput, FootprintResult } from './schemas';
 
+const ELECTRIC_FUEL_TYPE = 'electric';
+const HEAT_PUMP_FUEL_TYPE = 'heatpump';
+
 /**
  * Resolve the heating emission factor for a given fuel and region, in kg CO₂e per
  * natural unit of fuel (m³, litre, kg) — or per kWh for the two electric options.
@@ -24,8 +27,8 @@ import type { FootprintInput, FootprintResult } from './schemas';
  * its coefficient of performance.
  */
 export function heatingFactorFor(fuel: HeatingFuel, region: Region): number {
-  if (fuel === 'electric') return GRID_INTENSITY[region];
-  if (fuel === 'heatpump') return GRID_INTENSITY[region] / HEAT_PUMP_COP;
+  if (fuel === ELECTRIC_FUEL_TYPE) return GRID_INTENSITY[region];
+  if (fuel === HEAT_PUMP_FUEL_TYPE) return GRID_INTENSITY[region] / HEAT_PUMP_COP;
   return HEATING_FUEL_FACTOR[fuel];
 }
 
@@ -47,11 +50,12 @@ export function calculateFootprint(input: FootprintInput): FootprintResult {
   const transportTotal = car + transit + flights;
 
   // --- Home (annual kg CO₂e, attributed per person) ---
+  const RENEWABLE_PERCENT_DIVISOR = 100;
   const electricityRaw =
     home.electricityKwhPerMonth *
     MONTHS_PER_YEAR *
     GRID_INTENSITY[region] *
-    (1 - home.renewablePercent / 100);
+    (1 - home.renewablePercent / RENEWABLE_PERCENT_DIVISOR);
   const heatingRaw =
     home.heatingAmountPerMonth * MONTHS_PER_YEAR * heatingFactorFor(home.heatingFuel, region);
   const electricity = electricityRaw / home.householdSize;
@@ -62,14 +66,16 @@ export function calculateFootprint(input: FootprintInput): FootprintResult {
   const foodTotal = DIET_FACTOR[food.diet] * FOOD_WASTE_MULTIPLIER[food.foodWaste];
 
   // --- Consumption (annual kg CO₂e) ---
+  const NO_RECYCLING_MULTIPLIER = 1;
+  const KG_TO_TONNES_DIVISOR = 1000;
   const consumptionTotal =
-    SHOPPING_FACTOR[consumption.shopping] * (consumption.recycles ? RECYCLING_MULTIPLIER : 1);
+    SHOPPING_FACTOR[consumption.shopping] * (consumption.recycles ? RECYCLING_MULTIPLIER : NO_RECYCLING_MULTIPLIER);
 
   const totalKg = transportTotal + homeTotal + foodTotal + consumptionTotal;
 
   return {
     totalKg: round(totalKg),
-    totalTonnes: round(totalKg / 1000),
+    totalTonnes: round(totalKg / KG_TO_TONNES_DIVISOR),
     categories: {
       transport: round(transportTotal),
       home: round(homeTotal),

@@ -35,6 +35,35 @@ export interface DashboardViewProps {
 
 /** Maximum number of tips shown on the dashboard — enough for above-the-fold UX without overwhelming the user. */
 const MAX_TIPS_DISPLAYED = 6;
+
+/** Ratio threshold for being within target (at or below). */
+const TARGET_ACHIEVED_RATIO = 1;
+
+/** Number of decimal places for ratio formatting. */
+const RATIO_DECIMALS = 2;
+
+/** Minimum tips count to display tip list. */
+const MIN_TIPS_COUNT = 0;
+
+/** Minimum history entries to display chart. */
+const MIN_HISTORY_ENTRIES = 0;
+
+/**
+ * Generate headline text for target comparison.
+ */
+function getTargetHeadline(ratio: number): string {
+  return ratio <= TARGET_ACHIEVED_RATIO 
+    ? 'Within the target' 
+    : `${formatNumber(ratio, RATIO_DECIMALS)}× the target`;
+}
+
+/**
+ * Generate headline text for average comparison.
+ */
+function getAverageHeadline(percentOfAverage: number): string {
+  return `${formatPercent(percentOfAverage)} of average`;
+}
+
 export function DashboardView({ input, history }: DashboardViewProps): JSX.Element {
   const result = calculateFootprint(input);
   const breakdown = categoryBreakdown(result);
@@ -43,9 +72,8 @@ export function DashboardView({ input, history }: DashboardViewProps): JSX.Eleme
   const tips = generateTips(input, result, { limit: MAX_TIPS_DISPLAYED });
   const shapExplanations = calculateShap(input, result);
 
-  const targetHeadline =
-    target.ratio <= 1 ? 'Within the target' : `${formatNumber(target.ratio, 2)}× the target`;
-  const averageHeadline = `${formatPercent(average.percentOfAverage)} of average`;
+  const targetHeadline = getTargetHeadline(target.ratio);
+  const averageHeadline = getAverageHeadline(average.percentOfAverage);
 
   return (
     <div className="flex flex-col gap-10">
@@ -117,7 +145,7 @@ export function DashboardView({ input, history }: DashboardViewProps): JSX.Eleme
         <h2 id="tips-heading" className="font-display text-2xl font-bold text-ink">
           Your highest-impact actions
         </h2>
-        {tips.length > 0 ? (
+        {tips.length > MIN_TIPS_COUNT ? (
           <ol className="grid gap-3 md:grid-cols-2">
             {tips.map((tip, i) => (
               <TipCard key={tip.id} tip={tip} rank={i + 1} />
@@ -140,7 +168,7 @@ export function DashboardView({ input, history }: DashboardViewProps): JSX.Eleme
           Your progress over time
         </h2>
         <Card>
-          {history.length > 0 ? (
+          {history.length > MIN_HISTORY_ENTRIES ? (
             <HistoryTrendChart history={history} />
           ) : (
             <p className="text-ink/70">

@@ -34,6 +34,18 @@ const MODAL_SHIFT_FRACTION = 0.25;
 /** Renewable share that fully decarbonises an electricity tariff, percent. */
 const FULL_RENEWABLE_PERCENT = 100;
 
+/** Minimum number of long-haul flights to suggest replacement. */
+const MIN_LONGHAUL_FLIGHTS_FOR_TIP = 1;
+
+/** No-emission electric car fuel type constant. */
+const ELECTRIC_CAR_FUEL = 'electric';
+
+/** No car fuel type constant. */
+const NO_CAR_FUEL = 'none';
+
+/** Minimum emission difference to suggest a tip. */
+const MIN_EMISSION_SAVING_KG = 0;
+
 /** The next lower-impact diet for each diet (null for the lowest). */
 const LOWER_IMPACT_DIET: Record<Diet, Diet | null> = {
   high_meat: 'medium_meat',
@@ -44,8 +56,14 @@ const LOWER_IMPACT_DIET: Record<Diet, Diet | null> = {
   vegan: null,
 };
 
+/** Diet name delimiter for humanization. */
+const DIET_NAME_DELIMITER = '_';
+
+/** Diet name replacement for display. */
+const DIET_NAME_SPACE = ' ';
+
 function humanizeDiet(diet: Diet): string {
-  return diet.replace('_', ' ');
+  return diet.replace(DIET_NAME_DELIMITER, DIET_NAME_SPACE);
 }
 
 export interface GenerateTipsOptions {
@@ -69,9 +87,9 @@ export function generateTips(
   const { transport, home, food, consumption } = input;
 
   // 1. Switch the car toward electric.
-  if (transport.carFuel !== 'electric' && transport.carFuel !== 'none' && result.details.car > 0) {
+  if (transport.carFuel !== ELECTRIC_CAR_FUEL && transport.carFuel !== NO_CAR_FUEL && result.details.car > MIN_EMISSION_SAVING_KG) {
     const km = transport.carKmPerWeek * WEEKS_PER_YEAR;
-    const saving = km * (CAR_FUEL_FACTOR[transport.carFuel] - CAR_FUEL_FACTOR.electric);
+    const saving = km * (CAR_FUEL_FACTOR[transport.carFuel] - CAR_FUEL_FACTOR[ELECTRIC_CAR_FUEL]);
     tips.push({
       id: 'switch-ev',
       category: 'transport',
@@ -84,7 +102,7 @@ export function generateTips(
   }
 
   // 2. Replace one long-haul flight.
-  if (transport.flightsLongHaulPerYear >= 1) {
+  if (transport.flightsLongHaulPerYear >= MIN_LONGHAUL_FLIGHTS_FOR_TIP) {
     tips.push({
       id: 'cut-longhaul-flight',
       category: 'transport',
@@ -103,7 +121,7 @@ export function generateTips(
   ) {
     const shiftedKm = transport.carKmPerWeek * MODAL_SHIFT_FRACTION * WEEKS_PER_YEAR;
     const saving = shiftedKm * (CAR_FUEL_FACTOR[transport.carFuel] - TRANSIT_FACTOR);
-    if (saving > 0) {
+    if (saving > MIN_EMISSION_SAVING_KG) {
       tips.push({
         id: 'shift-to-transit',
         category: 'transport',
@@ -117,7 +135,7 @@ export function generateTips(
   }
 
   // 4. Switch to a renewable electricity tariff.
-  if (home.renewablePercent < FULL_RENEWABLE_PERCENT && result.details.electricity > 0) {
+  if (home.renewablePercent < FULL_RENEWABLE_PERCENT && result.details.electricity > MIN_EMISSION_SAVING_KG) {
     const saving =
       result.details.electricity * (1 - home.renewablePercent / FULL_RENEWABLE_PERCENT);
     tips.push({
@@ -136,7 +154,7 @@ export function generateTips(
   if (lower) {
     const saving =
       (DIET_FACTOR[food.diet] - DIET_FACTOR[lower]) * FOOD_WASTE_MULTIPLIER[food.foodWaste];
-    if (saving > 0) {
+    if (saving > MIN_EMISSION_SAVING_KG) {
       tips.push({
         id: 'diet-shift',
         category: 'food',
@@ -149,9 +167,10 @@ export function generateTips(
   }
 
   // 6. Cut food waste.
-  if (food.foodWaste !== 'low') {
+  const LOW_FOOD_WASTE = 'low';
+  if (food.foodWaste !== LOW_FOOD_WASTE) {
     const current = DIET_FACTOR[food.diet] * FOOD_WASTE_MULTIPLIER[food.foodWaste];
-    const reduced = DIET_FACTOR[food.diet] * FOOD_WASTE_MULTIPLIER.low;
+    const reduced = DIET_FACTOR[food.diet] * FOOD_WASTE_MULTIPLIER[LOW_FOOD_WASTE];
     tips.push({
       id: 'cut-food-waste',
       category: 'food',
@@ -164,9 +183,14 @@ export function generateTips(
   }
 
   // 7. Buy less and choose secondhand.
-  if (consumption.shopping !== 'minimal') {
-    const reducedLevel: Shopping = consumption.shopping === 'frequent' ? 'average' : 'minimal';
-    const multiplier = consumption.recycles ? RECYCLING_MULTIPLIER : 1;
+  const FREQUENT_SHOPPING_LEVEL = 'frequent';
+  const AVERAGE_SHOPPING_LEVEL = 'average';
+  const MINIMAL_SHOPPING_LEVEL = 'minimal';
+  const NO_RECYCLING_MULTIPLIER = 1;
+  
+  if (consumption.shopping !== MINIMAL_SHOPPING_LEVEL) {
+    const reducedLevel: Shopping = consumption.shopping === FREQUENT_SHOPPING_LEVEL ? AVERAGE_SHOPPING_LEVEL : MINIMAL_SHOPPING_LEVEL;
+    const multiplier = consumption.recycles ? RECYCLING_MULTIPLIER : NO_RECYCLING_MULTIPLIER;
     const saving =
       (SHOPPING_FACTOR[consumption.shopping] - SHOPPING_FACTOR[reducedLevel]) * multiplier;
     tips.push({
@@ -182,7 +206,7 @@ export function generateTips(
 
   // 8. Recycle consistently.
   if (!consumption.recycles) {
-    const saving = SHOPPING_FACTOR[consumption.shopping] * (1 - RECYCLING_MULTIPLIER);
+    const saving = SHOPPING_FACTOR[consumption.shopping] * (NO_RECYCLING_MULTIPLIER - RECYCLING_MULTIPLIER);
     tips.push({
       id: 'start-recycling',
       category: 'consumption',
@@ -195,6 +219,7 @@ export function generateTips(
 
   tips.sort((a, b) => b.estimatedSavingKg - a.estimatedSavingKg);
 
+  const ZERO_LIMIT = 0;
   const limit = options.limit ?? tips.length;
-  return tips.slice(0, Math.max(0, limit));
+  return tips.slice(ZERO_LIMIT, Math.max(ZERO_LIMIT, limit));
 }

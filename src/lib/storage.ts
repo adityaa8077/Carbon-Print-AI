@@ -27,6 +27,15 @@ const KEYS = {
 /** Cap stored history so a single browser key can never grow without bound. */
 const MAX_HISTORY = 100;
 
+/** Old prefix for backwards compatibility migration. */
+const OLD_KEY_PREFIX = 'ecotrace:';
+
+/** New prefix for current storage keys. */
+const NEW_KEY_PREFIX = 'carbonprint:';
+
+/** Null value returned when localStorage item doesn't exist. */
+const STORAGE_NULL_VALUE = null;
+
 function getStorage(): Storage | null {
   try {
     const g = globalThis as { localStorage?: Storage };
@@ -39,7 +48,7 @@ function getStorage(): Storage | null {
 
 /** True when localStorage is usable in this environment (false during SSR, private modes, etc.). */
 export function isStorageAvailable(): boolean {
-  return getStorage() !== null;
+  return getStorage() !== STORAGE_NULL_VALUE;
 }
 
 function writeRaw(key: string, value: unknown): boolean {
@@ -56,14 +65,14 @@ function writeRaw(key: string, value: unknown): boolean {
 
 function readValidated<S extends z.ZodTypeAny>(key: string, schema: S): z.infer<S> | null {
   const storage = getStorage();
-  if (!storage) return null;
+  if (!storage) return STORAGE_NULL_VALUE;
   try {
     const raw = storage.getItem(key);
-    if (raw === null) {
+    if (raw === STORAGE_NULL_VALUE) {
       // Migrate from old ecotrace localstorage key
-      const oldKey = key.replace('carbonprint:', 'ecotrace:');
+      const oldKey = key.replace(NEW_KEY_PREFIX, OLD_KEY_PREFIX);
       const oldRaw = storage.getItem(oldKey);
-      if (oldRaw !== null) {
+      if (oldRaw !== STORAGE_NULL_VALUE) {
         const parsed: unknown = JSON.parse(oldRaw);
         const result = schema.safeParse(parsed);
         if (result.success) {
@@ -72,14 +81,14 @@ function readValidated<S extends z.ZodTypeAny>(key: string, schema: S): z.infer<
           return result.data;
         }
       }
-      return null;
+      return STORAGE_NULL_VALUE;
     }
     const parsed: unknown = JSON.parse(raw);
     const result = schema.safeParse(parsed);
-    return result.success ? result.data : null;
+    return result.success ? result.data : STORAGE_NULL_VALUE;
   } catch {
     // Invalid JSON, etc.
-    return null;
+    return STORAGE_NULL_VALUE;
   }
 }
 
@@ -120,7 +129,8 @@ export function clearGoal(): void {
 
 /** Load the footprint history (empty array if missing or invalid). */
 export function loadHistory(): HistoryEntry[] {
-  return readValidated(KEYS.history, historySchema) ?? [];
+  const EMPTY_HISTORY: HistoryEntry[] = [];
+  return readValidated(KEYS.history, historySchema) ?? EMPTY_HISTORY;
 }
 
 /**
@@ -132,8 +142,9 @@ export function loadHistory(): HistoryEntry[] {
  * questionnaire is re-submitted without edits.
  */
 export function addHistoryEntry(entry: HistoryEntry): HistoryEntry[] {
+  const LAST_INDEX_OFFSET = 1;
   const history = loadHistory();
-  const last = history[history.length - 1];
+  const last = history[history.length - LAST_INDEX_OFFSET];
   if (last && last.totalKg === entry.totalKg) return history;
   const next = [...history, entry].slice(-MAX_HISTORY);
   writeRaw(KEYS.history, next);

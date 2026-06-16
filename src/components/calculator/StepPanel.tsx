@@ -20,52 +20,100 @@ export interface StepPanelProps {
   onUpdate: (patch: Partial<FootprintInput>) => void;
 }
 
+/** Step index constants for better readability. */
+const REGION_STEP_INDEX = 0;
+const TRANSPORT_STEP_INDEX = 1;
+const HOME_STEP_INDEX = 2;
+const FOOD_STEP_INDEX = 3;
+const CONSUMPTION_STEP_INDEX = 4;
+
+/** Type for step renderer function. */
+type StepRenderer = (props: StepPanelProps) => JSX.Element | null;
+
+/**
+ * Render the region step.
+ */
+function renderRegionStep({ input, errors, onUpdate }: StepPanelProps): JSX.Element {
+  return (
+    <RegionStep
+      value={input.region}
+      errors={errors}
+      onChange={(region: Region) => onUpdate({ region })}
+    />
+  );
+}
+
+/**
+ * Render the transport step.
+ */
+function renderTransportStep({ input, errors, onUpdate }: StepPanelProps): JSX.Element {
+  return (
+    <TransportStep
+      value={input.transport}
+      errors={errors}
+      onChange={(patch) => onUpdate({ transport: { ...input.transport, ...patch } })}
+    />
+  );
+}
+
+/**
+ * Render the home step.
+ */
+function renderHomeStep({ input, errors, onUpdate }: StepPanelProps): JSX.Element {
+  return (
+    <HomeStep
+      value={input.home}
+      errors={errors}
+      onChange={(patch) => onUpdate({ home: { ...input.home, ...patch } })}
+    />
+  );
+}
+
+/**
+ * Render the food step.
+ */
+function renderFoodStep({ input, errors, onUpdate }: StepPanelProps): JSX.Element {
+  return (
+    <FoodStep
+      value={input.food}
+      errors={errors}
+      onChange={(patch) => onUpdate({ food: { ...input.food, ...patch } })}
+    />
+  );
+}
+
+/**
+ * Render the consumption step.
+ */
+function renderConsumptionStep({ input, errors, onUpdate }: StepPanelProps): JSX.Element {
+  return (
+    <ConsumptionStep
+      value={input.consumption}
+      errors={errors}
+      onChange={(patch) => onUpdate({ consumption: { ...input.consumption, ...patch } })}
+    />
+  );
+}
+
+/**
+ * Render the review step.
+ */
+function renderReviewStep({ input }: StepPanelProps): JSX.Element {
+  return <ReviewStep input={input} />;
+}
+
+/** Map of step indices to their renderer functions. */
+const STEP_RENDERERS: Record<number, StepRenderer> = {
+  [REGION_STEP_INDEX]: renderRegionStep,
+  [TRANSPORT_STEP_INDEX]: renderTransportStep,
+  [HOME_STEP_INDEX]: renderHomeStep,
+  [FOOD_STEP_INDEX]: renderFoodStep,
+  [CONSUMPTION_STEP_INDEX]: renderConsumptionStep,
+  [LAST_STEP]: renderReviewStep,
+};
+
 /** Renders the fields for the active questionnaire step. */
-export function StepPanel({ step, input, errors, onUpdate }: StepPanelProps): JSX.Element | null {
-  switch (step) {
-    case 0:
-      return (
-        <RegionStep
-          value={input.region}
-          errors={errors}
-          onChange={(region: Region) => onUpdate({ region })}
-        />
-      );
-    case 1:
-      return (
-        <TransportStep
-          value={input.transport}
-          errors={errors}
-          onChange={(patch) => onUpdate({ transport: { ...input.transport, ...patch } })}
-        />
-      );
-    case 2:
-      return (
-        <HomeStep
-          value={input.home}
-          errors={errors}
-          onChange={(patch) => onUpdate({ home: { ...input.home, ...patch } })}
-        />
-      );
-    case 3:
-      return (
-        <FoodStep
-          value={input.food}
-          errors={errors}
-          onChange={(patch) => onUpdate({ food: { ...input.food, ...patch } })}
-        />
-      );
-    case 4:
-      return (
-        <ConsumptionStep
-          value={input.consumption}
-          errors={errors}
-          onChange={(patch) => onUpdate({ consumption: { ...input.consumption, ...patch } })}
-        />
-      );
-    case LAST_STEP:
-      return <ReviewStep input={input} />;
-    default:
-      return null;
-  }
+export function StepPanel(props: StepPanelProps): JSX.Element | null {
+  const renderer = STEP_RENDERERS[props.step];
+  return renderer ? renderer(props) : null;
 }

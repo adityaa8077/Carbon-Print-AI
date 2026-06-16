@@ -15,16 +15,25 @@ export interface TipCardProps {
   rank: number;
 }
 
+/** Icon size for category indicator. */
+const CATEGORY_ICON_SIZE = 20;
+
+/** Icon size for badges. */
+const BADGE_ICON_SIZE = 14;
+
+/** Size for category icon container. */
+const ICON_CONTAINER_SIZE = 'h-10 w-10';
+
 /** A single ranked reduction action, showing estimated saving and effort. */
 export function TipCard({ tip, rank }: TipCardProps): JSX.Element {
   const category = CATEGORY_META[tip.category];
   return (
     <li className="flex gap-4 rounded-2xl border border-primary/10 bg-white p-5">
       <span
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+        className={`flex ${ICON_CONTAINER_SIZE} shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary`}
         aria-hidden="true"
       >
-        <Icon name={category.icon} size={20} />
+        <Icon name={category.icon} size={CATEGORY_ICON_SIZE} />
       </span>
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
@@ -34,7 +43,7 @@ export function TipCard({ tip, rank }: TipCardProps): JSX.Element {
         <p className="text-sm text-ink/70">{tip.description}</p>
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <Badge tone="primary">
-            <Icon name="leaf" size={14} />
+            <Icon name="leaf" size={BADGE_ICON_SIZE} />
             Saves ~{formatCo2(tip.estimatedSavingKg)}/yr
           </Badge>
           <Badge tone={EFFORT_TONE[tip.effort]}>{EFFORT_LABELS[tip.effort]}</Badge>
