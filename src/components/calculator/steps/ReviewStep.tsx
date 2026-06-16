@@ -13,6 +13,9 @@ export interface ReviewStepProps {
   input: FootprintInput;
 }
 
+/** Placeholder shown when the user has selected 'none' for heating fuel. */
+const NO_HEATING_DISPLAY = '—';
+
 interface Row {
   label: string;
   value: string;
@@ -49,7 +52,7 @@ export function ReviewStep({ input }: ReviewStepProps): JSX.Element {
           label: 'Heating fuel used',
           value:
             input.home.heatingFuel === 'none'
-              ? '—'
+              ? NO_HEATING_DISPLAY
               : `${input.home.heatingAmountPerMonth} ${HEATING_FUEL_UNIT[input.home.heatingFuel]} / month`,
         },
         { label: 'Household size', value: `${input.home.householdSize}` },

@@ -27,12 +27,16 @@ export function middleware(request: NextRequest): NextResponse {
       return NextResponse.next();
     }
 
+    /** Number of random bytes used to generate each per-request nonce (~128 bits of entropy). */
+    const NONCE_BYTE_LENGTH = 16;
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-    const bytes = new Uint8Array(16);
+    /** Size of the base64 alphabet — must equal chars.length. */
+    const ALPHABET_SIZE = 64;
+    const bytes = new Uint8Array(NONCE_BYTE_LENGTH);
     crypto.getRandomValues(bytes);
     let nonce = '';
     for (let i = 0; i < bytes.length; i++) {
-      nonce += chars[(bytes[i] ?? 0) % 64];
+      nonce += chars[(bytes[i] ?? 0) % ALPHABET_SIZE];
     }
     const isDev = process.env.NODE_ENV === 'development';
 

@@ -10,6 +10,15 @@ import { LAST_STEP, STEP_LABELS, useCalculatorForm } from './useCalculatorForm';
  * `useCalculatorForm`; this component only lays out the stepper, the active
  * step's fields (via `StepPanel`), and the navigation controls.
  */
+
+/**
+ * Returns a display-ready heading for the given step index.
+ * The Review step gets a more descriptive title than its short label.
+ */
+function getStepHeading(step: number): string {
+  const label = STEP_LABELS[step] ?? '';
+  return label === 'Review' ? 'Review your answers' : label;
+}
 export function CalculatorForm(): JSX.Element {
   const { input, step, errors, status, headingRef, update, handleNext, handleBack, handleSubmit } =
     useCalculatorForm();
@@ -32,7 +41,7 @@ export function CalculatorForm(): JSX.Element {
             tabIndex={-1}
             className="font-display text-2xl font-bold text-ink focus:outline-none"
           >
-            {STEP_LABELS[step] === 'Review' ? 'Review your answers' : `${STEP_LABELS[step]}`}
+            {getStepHeading(step)}
           </h2>
           <p className="mt-1 text-ink/60">
             Step {step + 1} of {STEP_LABELS.length}

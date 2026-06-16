@@ -32,12 +32,15 @@ export interface DashboardViewProps {
  * component only arranges and labels them. Splitting it out from the localStorage
  * loading shell keeps it deterministic and straightforward to unit test.
  */
+
+/** Maximum number of tips shown on the dashboard — enough for above-the-fold UX without overwhelming the user. */
+const MAX_TIPS_DISPLAYED = 6;
 export function DashboardView({ input, history }: DashboardViewProps): JSX.Element {
   const result = calculateFootprint(input);
   const breakdown = categoryBreakdown(result);
   const target = compareToTarget(result.totalTonnes);
   const average = compareToAverage(result.totalTonnes, input.region);
-  const tips = generateTips(input, result, { limit: 6 });
+  const tips = generateTips(input, result, { limit: MAX_TIPS_DISPLAYED });
   const shapExplanations = calculateShap(input, result);
 
   const targetHeadline =

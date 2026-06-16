@@ -81,6 +81,7 @@ Use these commands for local checks:
 npm install          # Install dependencies
 npm run dev          # Run hot-reloading dev server
 npm run test         # Execute unit test suite (Vitest)
+npm run test:coverage # Run tests with v8 coverage report
 npm run typecheck    # Check TypeScript compiles
 npm run lint         # Scan for lint errors (ESLint)
 npm run build        # Build optimized production assets

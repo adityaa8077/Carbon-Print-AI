@@ -20,6 +20,9 @@ import { validateStep, type FieldErrors } from './validation';
 export const STEP_LABELS = ['Region', 'Transport', 'Home', 'Food', 'Shopping', 'Review'] as const;
 export const LAST_STEP = STEP_LABELS.length - 1;
 
+/** Fallback error copy shown on the Region step when no top-level field path exists in the Zod error. */
+const REGION_STEP_FALLBACK_ERROR = 'Please choose an option.';
+
 export interface UseCalculatorForm {
   /** The full questionnaire state (always a complete, defaulted input). */
   input: FootprintInput;
@@ -99,7 +102,7 @@ export function useCalculatorForm(): UseCalculatorForm {
     // For the region step the path is empty, so map the root error onto `region`.
     setErrors(
       step === 0
-        ? { region: Object.values(result.errors)[0] ?? 'Please choose an option.' }
+        ? { region: Object.values(result.errors)[0] ?? REGION_STEP_FALLBACK_ERROR }
         : result.errors,
     );
     setStatus('Please fix the highlighted fields before continuing.');
