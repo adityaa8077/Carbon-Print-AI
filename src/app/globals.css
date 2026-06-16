@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Carbon Print AI design tokens — "Cyber-Biophilic" dark theme.
+   Keep in sync with tailwind.config.ts. */
+:root {
+  --color-primary: #10b981;
+  --color-secondary: #06b6d4;
+  --color-accent: #6366f1;
+  --color-surface: #131a26;
+  --color-ink: #f1f5f9;
+  --color-warning: #f59e0b;
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #0b0f19;
+  background-image: radial-gradient(ellipse at top, #161e2e, #090d16);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,38 @@
+import { type JSX, useId } from 'react';
+import { cn } from '@/lib/cn';
+
+export interface CheckboxProps {
+  label: string;
+  description?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+/** A single labelled checkbox styled as a card; ≥44px touch target. */
+export function Checkbox({ label, description, checked, onChange }: CheckboxProps): JSX.Element {
+  const id = useId();
+  return (
+    <label
+      htmlFor={id}
+      className={cn(
+        'flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all',
+        'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/40 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-slate-900',
+        checked
+          ? 'border-primary bg-primary/10 ring-1 ring-primary text-slate-100'
+          : 'border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-900/20 text-slate-300',
+      )}
+    >
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-1 h-5 w-5 shrink-0 accent-primary"
+      />
+      <span className="flex flex-col">
+        <span className="font-semibold text-slate-200">{label}</span>
+        {description ? <span className="text-sm text-slate-400">{description}</span> : null}
+      </span>
+    </label>
+  );
+}
