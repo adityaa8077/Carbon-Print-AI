@@ -18,47 +18,53 @@ import { NextResponse, type NextRequest } from 'next/server';
  * See SECURITY.md and https://nextjs.org/docs/app/guides/content-security-policy.
  */
 export function middleware(request: NextRequest): NextResponse {
-  // Skip prefetches dynamically (equivalent to the previous declarative matcher config)
-  const isPrefetch =
-    request.headers.get('next-router-prefetch') !== null ||
-    request.headers.get('purpose') === 'prefetch';
-  if (isPrefetch) {
-    return NextResponse.next();
+  try {
+    // Skip prefetches dynamically (equivalent to the previous declarative matcher config)
+    const isPrefetch =
+      request.headers.get('next-router-prefetch') !== null ||
+      request.headers.get('purpose') === 'prefetch';
+    if (isPrefetch) {
+      return NextResponse.next();
+    }
+
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    let nonce = '';
+    for (let i = 0; i < bytes.length; i++) {
+      nonce += chars[(bytes[i] ?? 0) % 64];
+    }
+    const isDev = process.env.NODE_ENV === 'development';
+
+    const csp = [
+      "default-src 'self'",
+      `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,
+      // Next.js / Tailwind inject inline <style> tags; styles are a far lower-risk
+      // sink than scripts, so 'unsafe-inline' is accepted here.
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "font-src 'self'",
+      `connect-src 'self'${isDev ? ' ws:' : ''}`,
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+      'upgrade-insecure-requests',
+    ].join('; ');
+
+    // Expose the nonce to the renderer so Next.js can stamp its scripts with it.
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-nonce', nonce);
+    requestHeaders.set('Content-Security-Policy', csp);
+
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
+    response.headers.set('Content-Security-Policy', csp);
+    return response;
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : 'No stack';
+    return new NextResponse(`Middleware Error: ${message}\nStack: ${stack}`, { status: 200 });
   }
-
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  let nonce = '';
-  for (let i = 0; i < bytes.length; i++) {
-    nonce += chars[(bytes[i] ?? 0) % 64];
-  }
-  const isDev = process.env.NODE_ENV === 'development';
-
-  const csp = [
-    "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,
-    // Next.js / Tailwind inject inline <style> tags; styles are a far lower-risk
-    // sink than scripts, so 'unsafe-inline' is accepted here.
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
-    "font-src 'self'",
-    `connect-src 'self'${isDev ? ' ws:' : ''}`,
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-    'upgrade-insecure-requests',
-  ].join('; ');
-
-  // Expose the nonce to the renderer so Next.js can stamp its scripts with it.
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-nonce', nonce);
-  requestHeaders.set('Content-Security-Policy', csp);
-
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
-  response.headers.set('Content-Security-Policy', csp);
-  return response;
 }
 
 export const config = {
