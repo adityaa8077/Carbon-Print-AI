@@ -21,7 +21,7 @@
         "newlines-between": "never"
       }
     ],
-    "no-console": ["warn", { "allow": ["warn", "error"] }]
+    "no-console": ["error", { "allow": ["warn", "error"] }]
   },
   "ignorePatterns": ["node_modules/", ".next/", "coverage/", "out/", "playwright-report/"]
 }
